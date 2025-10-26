@@ -103,3 +103,60 @@ body {
     width: 90vw;
   }
 }
+/* ----- Touch controls for iPad / mobile ----- */
+#touchControls {
+  width: 480px;
+  max-width: 90vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#joystickArea {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(0,255,255,0.15) 0%, rgba(0,0,0,0.4) 70%);
+  border: 2px solid rgba(0,255,255,0.4);
+  position: relative;
+  touch-action: none; /* prevent scrolling while dragging */
+  box-shadow: 0 0 15px rgba(0,255,255,0.4);
+}
+
+#joystickDot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  margin-top: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #00fff2 0%, #005b52 70%);
+  box-shadow: 0 0 20px rgba(0,255,255,0.7);
+}
+
+#startBtn {
+  background: radial-gradient(circle at 50% 20%, #1a1a4a 0%, #000 70%);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 2px solid #4af;
+  text-shadow: 0 0 8px #4af;
+  box-shadow: 0 0 16px rgba(0,128,255,0.6), 0 12px 24px rgba(0,0,0,0.8);
+  min-width: 100px;
+}
+
+/* Hide touch controls on wider screens (desktops with keyboard) */
+@media (min-width: 768px) {
+  #touchControls {
+    display: none;
+  }
+}
+
