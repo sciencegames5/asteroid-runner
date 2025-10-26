@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div id="ui">
     <div class="row">
       <div class="label">SCORE</div>
@@ -16,12 +17,14 @@
   </div>
 
   <canvas id="gameCanvas" width="480" height="720"></canvas>
+
+  <!-- Touch controls for tablets/phones -->
   <div id="touchControls">
-  <div id="joystickArea">
-    <div id="joystickDot"></div>
+    <div id="joystickArea">
+      <div id="joystickDot"></div>
+    </div>
+    <button id="startBtn">START</button>
   </div>
-  <button id="startBtn">START</button>
-</div>
 
   <script src="game.js"></script>
 </body>
