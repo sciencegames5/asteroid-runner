@@ -1,0 +1,105 @@
+/* Reset-ish */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at 50% 30%, #0a0f2e 0%, #000 70%);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 16px;
+  gap: 12px;
+}
+
+/* Canvas frame */
+#gameCanvas {
+  border: 2px solid #3a3a6a;
+  background: #000;
+  border-radius: 8px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px #1a1a4a inset;
+  image-rendering: pixelated;
+}
+
+/* Score / message overlay */
+#ui {
+  width: 480px;
+  max-width: 90vw;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-shadow: 0 0 8px #4af, 0 0 16px #4af;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  line-height: 1.2rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: #cfe8ff;
+  padding: 4px 6px;
+  background: rgba(0,0,40,0.4);
+  border: 1px solid #3a4b9a;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0,128,255,0.4);
+}
+
+.label {
+  opacity: 0.7;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+#score {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  color: #7affcf;
+  text-shadow: 0 0 8px #00ff95;
+}
+
+/* Game over / start / restart text */
+#message {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #ff4a4a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.9rem;
+  line-height: 1.3rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-shadow: 0 0 8px #f44;
+  box-shadow: 0 0 15px rgba(255,0,0,0.4);
+  white-space: pre-line;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 500px) {
+  body {
+    padding-top: 8px;
+    gap: 8px;
+  }
+  #gameCanvas {
+    width: 90vw;
+    height: calc(90vw * 1.5); /* keep ~480x720 aspect */
+  }
+  #ui {
+    width: 90vw;
+  }
+}
