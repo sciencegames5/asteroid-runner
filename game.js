@@ -20,6 +20,10 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const msgEl = document.getElementById("message");
 
+const joystickArea = document.getElementById("joystickArea");
+const joystickDot = document.getElementById("joystickDot");
+const startBtn = document.getElementById("startBtn");
+
 // ====== GAME STATE ======
 let running = false;
 let gameOver = false;
@@ -47,12 +51,17 @@ const player = {
 
 let asteroids = [];
 
-// ====== INPUT HANDLERS ======
+// ====== TOUCH / JOYSTICK STATE ======
+let touchActive = false;
+let touchVX = 0;
+let touchVY = 0;
+const MAX_DRAG_DIST = 50; // pixels = full speed
+
+// ====== INPUT HANDLERS (KEYBOARD) ======
 window.addEventListener("keydown", (e) => {
   if (keys.hasOwnProperty(e.key)) {
     keys[e.key] = true;
   }
-
   // Spacebar to start / restart
   if (e.code === "Space") {
     if (!running) {
@@ -67,7 +76,96 @@ window.addEventListener("keyup", (e) => {
   }
 });
 
-// ====== CORE FUNCTIONS ======
+// ====== TOUCH / JOYSTICK HANDLERS ======
+
+// helper to move the visual dot
+function updateJoystickDot(dx, dy) {
+  if (!joystickDot) return;
+  joystickDot.style.left = `calc(50% + ${dx}px)`;
+  joystickDot.style.top  = `calc(50% + ${dy}px)`;
+}
+
+function handleMoveTouch(clientX, clientY) {
+  if (!joystickArea) return;
+  const rect = joystickArea.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+
+  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+  const max = MAX_DRAG_DIST;
+  const clampedDist = Math.min(dist, max);
+  const scale = clampedDist / dist;
+
+  const ndx = dx * scale;
+  const ndy = dy * scale;
+
+  // visual feedback
+  updateJoystickDot(ndx, ndy);
+
+  // convert to movement -1..1
+  touchVX = ndx / max;
+  touchVY = ndy / max;
+}
+
+if (joystickArea) {
+  // touch start
+  joystickArea.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    touchActive = true;
+    const t = e.touches[0];
+    handleMoveTouch(t.clientX, t.clientY);
+  }, { passive: false });
+
+  // touch move
+  joystickArea.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    handleMoveTouch(t.clientX, t.clientY);
+  }, { passive: false });
+
+  // touch end
+  joystickArea.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    touchActive = false;
+    touchVX = 0;
+    touchVY = 0;
+    updateJoystickDot(0,0);
+  }, { passive: false });
+
+  // mouse down (for trackpads/Chromebooks)
+  joystickArea.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    touchActive = true;
+    handleMoveTouch(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!touchActive) return;
+    handleMoveTouch(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!touchActive) return;
+    touchActive = false;
+    touchVX = 0;
+    touchVY = 0;
+    updateJoystickDot(0,0);
+  });
+}
+
+// START button for iPad (no keyboard needed)
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    if (!running) {
+      startGame();
+    }
+  });
+}
+
+// ====== CORE GAME FUNCTIONS ======
 function startGame() {
   running = true;
   gameOver = false;
@@ -91,7 +189,7 @@ function endGame() {
   showMessage(
     "💥 GAME OVER 💥\n" +
     `Survival Time: ${elapsedSurvival.toFixed(1)}s\n\n` +
-    "Press SPACE to try again"
+    "Press SPACE or TAP START to try again"
   );
 }
 
@@ -113,20 +211,25 @@ function update(dt) {
   scoreEl.textContent = elapsedSurvival.toFixed(1);
 
   // 2. Difficulty ramp
-  // Gradually decrease spawn interval but clamp
   const difficultyFactor = 1 - Math.min(elapsedSurvival / 60, 0.8); // down to ~20%
   spawnInterval =
     ASTEROID_SPAWN_INTERVAL_MIN +
     (ASTEROID_SPAWN_INTERVAL_START - ASTEROID_SPAWN_INTERVAL_MIN) *
       difficultyFactor;
 
-  // 3. Move player
+  // 3. Player movement
   let vx = 0;
   let vy = 0;
+
+  // keyboard
   if (keys.ArrowLeft || keys.a) vx -= 1;
   if (keys.ArrowRight || keys.d) vx += 1;
   if (keys.ArrowUp || keys.w) vy -= 1;
   if (keys.ArrowDown || keys.s) vy += 1;
+
+  // joystick / touch
+  vx += touchVX;
+  vy += touchVY;
 
   // normalize diagonal so it's not faster
   if (vx !== 0 && vy !== 0) {
@@ -223,8 +326,6 @@ function draw() {
 }
 
 function drawStarfield() {
-  // quick fake stars:
-  // we can make them flicker based on elapsedSurvival so they subtly animate
   ctx.fillStyle = "#fff";
   for (let i = 0; i < 40; i++) {
     const sx = (i * 127 + (elapsedSurvival * 60 * (i % 5))) % CANVAS_W;
@@ -239,7 +340,6 @@ function drawStarfield() {
 function drawPlayer() {
   const { x, y, size } = player;
 
-  // glow
   ctx.save();
   ctx.shadowColor = "#00fff2";
   ctx.shadowBlur = 15;
@@ -247,7 +347,7 @@ function drawPlayer() {
   // ship body (triangle)
   ctx.fillStyle = "#00fff2";
   ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.6);        // nose
+  ctx.moveTo(x, y - size * 0.6);             // nose
   ctx.lineTo(x - size * 0.4, y + size * 0.5); // left wing
   ctx.lineTo(x + size * 0.4, y + size * 0.5); // right wing
   ctx.closePath();
@@ -276,11 +376,11 @@ function drawPlayer() {
 function drawAsteroid(a) {
   ctx.save();
   ctx.translate(a.x, a.y);
-  a.angle += a.spin * (1 / 60); // small spin per frame (not tied to dt to keep it visual)
+  a.angle += a.spin * (1 / 60); // slight spin
 
   ctx.rotate(a.angle);
 
-  // body
+  // asteroid body
   const grd = ctx.createRadialGradient(0, 0, a.size * 0.1, 0, 0, a.size * 0.6);
   grd.addColorStop(0, "#5a524a");
   grd.addColorStop(1, "#2a211a");
@@ -290,7 +390,7 @@ function drawAsteroid(a) {
   roughRockShapePath(ctx, a.size * 0.5);
   ctx.fill();
 
-  // outline
+  // outline highlight
   ctx.lineWidth = 2;
   ctx.strokeStyle = "rgba(255,255,255,0.1)";
   ctx.stroke();
@@ -312,15 +412,7 @@ function roughRockShapePath(ctx, radius) {
   ctx.closePath();
 }
 
-// ====== INIT MESSAGE ======
-showMessage(
-  "🚀 ASTEROID RUNNER 🚀\n" +
-  "Move:  WASD / Arrow Keys\n" +
-  "Goal:  Don't get hit.\n\n" +
-  "Press SPACE to start"
-);
-
-// ====== SMALL HELPERS ======
+// ====== MESSAGE HELPERS ======
 function showMessage(text) {
   msgEl.textContent = text;
   msgEl.classList.remove("hidden");
@@ -329,3 +421,11 @@ function showMessage(text) {
 function hideMessage() {
   msgEl.classList.add("hidden");
 }
+
+// ====== INITIAL MESSAGE ======
+showMessage(
+  "🚀 ASTEROID RUNNER 🚀\n" +
+  "Move:  Joystick (touch) or WASD/Arrows\n" +
+  "Goal:  Don't get hit.\n\n" +
+  "Press SPACE or TAP START"
+);
