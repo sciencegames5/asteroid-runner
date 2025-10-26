@@ -1,4 +1,4 @@
-/* Reset-ish */
+/* Basic reset */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -28,9 +28,10 @@ body {
   border-radius: 8px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px #1a1a4a inset;
   image-rendering: pixelated;
+  touch-action: none; /* don't scroll the page when dragging */
 }
 
-/* Score / message overlay */
+/* UI above canvas */
 #ui {
   width: 480px;
   max-width: 90vw;
@@ -90,19 +91,6 @@ body {
   display: none;
 }
 
-@media (max-width: 500px) {
-  body {
-    padding-top: 8px;
-    gap: 8px;
-  }
-  #gameCanvas {
-    width: 90vw;
-    height: calc(90vw * 1.5); /* keep ~480x720 aspect */
-  }
-  #ui {
-    width: 90vw;
-  }
-}
 /* ----- Touch controls for iPad / mobile ----- */
 #touchControls {
   width: 480px;
@@ -159,4 +147,22 @@ body {
     display: none;
   }
 }
+
+@media (max-width: 500px) {
+  body {
+    padding-top: 8px;
+    gap: 8px;
+  }
+  #gameCanvas {
+    width: 90vw;
+    height: calc(90vw * 1.5); /* maintain ~480x720 aspect ratio */
+  }
+  #ui {
+    width: 90vw;
+  }
+  #touchControls {
+    width: 90vw;
+  }
+}
+
 
